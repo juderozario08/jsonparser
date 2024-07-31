@@ -42,6 +42,7 @@ Expected output:
 */
 
 import (
+	"errors"
 	"fmt"
 )
 
@@ -94,29 +95,33 @@ func ValidateSyntax(tokens []string) bool {
 	stack := make([]string, 0)
 	for _, token := range tokens {
 		value, exists := tokenVal[token]
+		// Change this to an if condition and fix the test case not working
 		if exists {
 			switch value {
-			case TokenBraceOpen:
-				stack = append(stack, token)
-			case TokenSquareOpen:
-				stack = append(stack, token)
-			case TokenBracketOpen:
-				stack = append(stack, token)
+			case TokenBraceOpen | TokenSquareOpen | TokenBracketOpen:
+				Push(&stack, token)
+				fmt.Println(stack)
 			case TokenBracketClose:
-				if string(stack[len(stack)-1]) != "(" {
+				elem, err := LastElement(&stack)
+				if err != nil || tokenVal[elem] != TokenBracketOpen {
 					return false
 				}
-				stack = stack[:len(stack)-1]
+				_, _ = Pop(&stack)
+				fmt.Println(stack)
 			case TokenSquareClose:
-				if string(stack[len(stack)-1]) != "[" {
+				elem, err := LastElement(&stack)
+				if err != nil || tokenVal[elem] != TokenSquareOpen {
 					return false
 				}
-				stack = stack[:len(stack)-1]
+				_, _ = Pop(&stack)
+				fmt.Println(stack)
 			case TokenBraceClose:
-				if string(stack[len(stack)-1]) != "{" {
+				elem, err := LastElement(&stack)
+				if err != nil || tokenVal[elem] != TokenBracketOpen {
 					return false
 				}
-				stack = stack[:len(stack)-1]
+				_, _ = Pop(&stack)
+				fmt.Println(stack)
 			}
 		}
 	}
@@ -130,4 +135,29 @@ func Tokenizer(input string) []Token {
 		i++
 	}
 	return []Token{}
+}
+
+func GetValueFromString() {
+
+}
+
+func Push(stack *[]string, value string) {
+	*stack = append(*stack, value)
+}
+
+func Pop(stack *[]string) (string, error) {
+	if len(*stack) > 0 {
+		value := (*stack)[len(*stack)-1]
+		*stack = (*stack)[:len(*stack)-1]
+		return value, nil
+	}
+	return "", errors.New("ARRAY CONTAINS 0 ELEMENTS")
+}
+
+func LastElement(stack *[]string) (string, error) {
+	arr := *stack
+	if len(arr) != 0 {
+		return arr[len(arr)-1], nil
+	}
+	return "", errors.New("INVALID INDEX")
 }
