@@ -63,7 +63,7 @@ const (
 	TokenNull
 )
 
-var tokenVal = map[string]TokenType{
+var tokenVal = map[any]TokenType{
 	"{":     TokenBraceOpen,
 	"}":     TokenBraceClose,
 	"[":     TokenSquareOpen,
