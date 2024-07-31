@@ -1,42 +1,5 @@
 package parser
 
-import (
-	"fmt"
-	"strings"
-)
-
-type TokenType int
-
-const (
-	TokenBraceOpen TokenType = iota
-	TokenBraceClose
-	TokenBracketOpen
-	TokenBracketClose
-	TokenSquareOpen
-	TokenSquareClose
-	TokenString
-	TokenNumber
-	TokenComma
-	TokenColon
-	TokenTrue
-	TokenFalse
-	TokenNull
-)
-
-var tokenVal = map[string]TokenType{
-	"{":     TokenBraceOpen,
-	"}":     TokenBraceClose,
-	"[":     TokenSquareOpen,
-	"]":     TokenSquareClose,
-	"(":     TokenBracketOpen,
-	")":     TokenBracketClose,
-	",":     TokenComma,
-	":":     TokenColon,
-	"true":  TokenTrue,
-	"false": TokenFalse,
-	"null":  TokenNull,
-}
-
 /*
 Expected Input:
 {
@@ -78,6 +41,42 @@ Expected output:
 ]
 */
 
+import (
+	"fmt"
+)
+
+type TokenType int
+
+const (
+	TokenBraceOpen TokenType = iota
+	TokenBraceClose
+	TokenBracketOpen
+	TokenBracketClose
+	TokenSquareOpen
+	TokenSquareClose
+	TokenString
+	TokenNumber
+	TokenComma
+	TokenColon
+	TokenTrue
+	TokenFalse
+	TokenNull
+)
+
+var tokenVal = map[string]TokenType{
+	"{":     TokenBraceOpen,
+	"}":     TokenBraceClose,
+	"[":     TokenSquareOpen,
+	"]":     TokenSquareClose,
+	"(":     TokenBracketOpen,
+	")":     TokenBracketClose,
+	",":     TokenComma,
+	":":     TokenColon,
+	"true":  TokenTrue,
+	"false": TokenFalse,
+	"null":  TokenNull,
+}
+
 type Token struct {
 	Type  TokenType
 	Value string
@@ -94,28 +93,31 @@ func Tokenize(input string) string {
 func ValidateSyntax(tokens []string) bool {
 	stack := make([]string, 0)
 	for _, token := range tokens {
-		switch token {
-		case "{":
-			stack = append(stack, token)
-		case "[":
-			stack = append(stack, token)
-		case "(":
-			stack = append(stack, token)
-		case ")":
-			if string(stack[len(stack)-1]) != "(" {
-				return false
+		value, exists := tokenVal[token]
+		if exists {
+			switch value {
+			case TokenBraceOpen:
+				stack = append(stack, token)
+			case TokenSquareOpen:
+				stack = append(stack, token)
+			case TokenBracketOpen:
+				stack = append(stack, token)
+			case TokenBracketClose:
+				if string(stack[len(stack)-1]) != "(" {
+					return false
+				}
+				stack = stack[:len(stack)-1]
+			case TokenSquareClose:
+				if string(stack[len(stack)-1]) != "[" {
+					return false
+				}
+				stack = stack[:len(stack)-1]
+			case TokenBraceClose:
+				if string(stack[len(stack)-1]) != "{" {
+					return false
+				}
+				stack = stack[:len(stack)-1]
 			}
-			stack = stack[:len(stack)-1]
-		case "]":
-			if string(stack[len(stack)-1]) != "[" {
-				return false
-			}
-			stack = stack[:len(stack)-1]
-		case "}":
-			if string(stack[len(stack)-1]) != "{" {
-				return false
-			}
-			stack = stack[:len(stack)-1]
 		}
 	}
 	return true
