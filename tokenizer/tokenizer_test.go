@@ -1,4 +1,4 @@
-package parser
+package tokenizer
 
 import (
 	"testing"
@@ -28,7 +28,16 @@ func TestTokenizer(t *testing.T) {
 				},
 			},
 			{
-				input: `{"id":"120391", "name": "Some Name", "age": "20", "something": [], "boolean": "true", "nullValue": "null"}`,
+				input: `
+					{
+						"id":"120391",
+						"name": "Some Name",
+						"age": "20",
+						"something": [],
+						"boolean": "true",
+						"nullValue": "null"
+					}
+				`,
 				expected: []Token{
 					{Type: TokenBraceOpen, Value: "{"},
 					{Type: TokenString, Value: "id"},

@@ -2,46 +2,46 @@ package main
 
 import (
 	"fmt"
-	"jsonparser/parser"
+	"jsonparser/tokenizer"
 )
 
 type TokenizerTest struct {
 	input    string
-	expected []parser.Token
+	expected []tokenizer.Token
 }
 
 func main() {
 	test := TokenizerTest{
 		input: `{"id":"120391", "name": "Some Name", "age": "20", "something": [], "boolean": "true", "nullValue": "null"}`,
-		expected: []parser.Token{
-			{Type: parser.TokenBraceOpen, Value: "{"},
-			{Type: parser.TokenString, Value: "id"},
-			{Type: parser.TokenColon, Value: ":"},
-			{Type: parser.TokenNumber, Value: "120391"},
-			{Type: parser.TokenComma, Value: ","},
-			{Type: parser.TokenString, Value: "name"},
-			{Type: parser.TokenColon, Value: ":"},
-			{Type: parser.TokenString, Value: "Some Name"},
-			{Type: parser.TokenComma, Value: ","},
-			{Type: parser.TokenString, Value: "age"},
-			{Type: parser.TokenColon, Value: ":"},
-			{Type: parser.TokenNumber, Value: "20"},
-			{Type: parser.TokenComma, Value: ","},
-			{Type: parser.TokenString, Value: "something"},
-			{Type: parser.TokenColon, Value: ":"},
-			{Type: parser.TokenSquareOpen, Value: "["},
-			{Type: parser.TokenSquareClose, Value: "]"},
-			{Type: parser.TokenComma, Value: ","},
-			{Type: parser.TokenString, Value: "boolean"},
-			{Type: parser.TokenColon, Value: ":"},
-			{Type: parser.TokenBool, Value: "true"},
-			{Type: parser.TokenComma, Value: ","},
-			{Type: parser.TokenString, Value: "nullValue"},
-			{Type: parser.TokenColon, Value: ":"},
-			{Type: parser.TokenNull, Value: "null"},
-			{Type: parser.TokenBraceClose, Value: "}"},
+		expected: []tokenizer.Token{
+			{Type: tokenizer.TokenBraceOpen, Value: "{"},
+			{Type: tokenizer.TokenString, Value: "id"},
+			{Type: tokenizer.TokenColon, Value: ":"},
+			{Type: tokenizer.TokenNumber, Value: "120391"},
+			{Type: tokenizer.TokenComma, Value: ","},
+			{Type: tokenizer.TokenString, Value: "name"},
+			{Type: tokenizer.TokenColon, Value: ":"},
+			{Type: tokenizer.TokenString, Value: "Some Name"},
+			{Type: tokenizer.TokenComma, Value: ","},
+			{Type: tokenizer.TokenString, Value: "age"},
+			{Type: tokenizer.TokenColon, Value: ":"},
+			{Type: tokenizer.TokenNumber, Value: "20"},
+			{Type: tokenizer.TokenComma, Value: ","},
+			{Type: tokenizer.TokenString, Value: "something"},
+			{Type: tokenizer.TokenColon, Value: ":"},
+			{Type: tokenizer.TokenSquareOpen, Value: "["},
+			{Type: tokenizer.TokenSquareClose, Value: "]"},
+			{Type: tokenizer.TokenComma, Value: ","},
+			{Type: tokenizer.TokenString, Value: "boolean"},
+			{Type: tokenizer.TokenColon, Value: ":"},
+			{Type: tokenizer.TokenBool, Value: "true"},
+			{Type: tokenizer.TokenComma, Value: ","},
+			{Type: tokenizer.TokenString, Value: "nullValue"},
+			{Type: tokenizer.TokenColon, Value: ":"},
+			{Type: tokenizer.TokenNull, Value: "null"},
+			{Type: tokenizer.TokenBraceClose, Value: "}"},
 		},
 	}
-	result := parser.Tokenizer(test.input)
+	result := tokenizer.Tokenizer(test.input)
 	fmt.Println(result.IsEqual(test.expected))
 }
