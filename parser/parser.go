@@ -2,6 +2,7 @@ package parser
 
 import (
 	"strconv"
+	"strings"
 )
 
 /*
@@ -15,15 +16,15 @@ Expected Input:
 	nullValue: null
 }
 Expected output:
-[
+[]Token{
 	{ Type: TokenBraceOpen, Value: "{" },
 	{ Type: TokenString, Value: "id" },
 	{ Type: TokenColon, Value: ":" },
-	{ Type: TokenString, Value: "some-string
+	{ Type: TokenString, Value: "some-string" },
 	{ Type: TokenComma, Value: "," },
 	{ Type: TokenString, Value: "name" },
 	{ Type: TokenColon, Value: ":" },
-	{ Type: TokenString, Value: "some-string
+	{ Type: TokenString, Value: "some-string" },
 	{ Type: TokenComma, Value: "," },
 	{ Type: TokenString, Value: "age" },
 	{ Type: TokenColon, Value: ":" },
@@ -36,13 +37,13 @@ Expected output:
 	{ Type: TokenComma, Value: "," },
 	{ Type: TokenString, Value: "boolean" },
 	{ Type: TokenColon, Value: ":" },
-	{ Type: TokenTrue, Value: "true" },
+	{ Type: TokenBool, Value: "true" },
 	{ Type: TokenComma, Value: "," },
 	{ Type: TokenString, Value: "nullValue" },
 	{ Type: TokenColon, Value: ":" },
 	{ Type: TokenNull, Value: "null" },
 	{ Type: TokenBraceClose, Value: "}" }
-]
+}
 */
 
 type TokenType int
@@ -67,7 +68,9 @@ type Token struct {
 	Value string
 }
 
-func Tokenizer(input string) []Token {
+type Tokens []Token
+
+func Tokenizer(input string) Tokens {
 	tokens := make([]Token, 0)
 	for i := 0; i < len(input); {
 		character := string(input[i])
@@ -88,14 +91,14 @@ func Tokenizer(input string) []Token {
 			tokens = append(tokens, Token{Type: TokenComma, Value: character})
 		case ":":
 			tokens = append(tokens, Token{Type: TokenColon, Value: character})
-		case "\"":
+		case `"`:
 			val := ""
 			for i += 1; string(input[i]) != "\""; i++ {
 				val += string(input[i])
 			}
 			_, err := strconv.Atoi(val)
 			if err != nil {
-				switch val {
+				switch strings.ToLower(val) {
 				case "false", "true":
 					tokens = append(tokens, Token{Type: TokenBool, Value: val})
 				case "null":

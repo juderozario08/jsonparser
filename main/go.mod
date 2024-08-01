@@ -1,7 +1,7 @@
 module jsonparser/main
 
-go 1.22.4
+go 1.22.5
 
-replace jsonparser => ../
+replace jsonparser/parser => ../parser
 
-require jsonparser v0.0.0-00010101000000-000000000000
+require jsonparser/parser v0.0.0-00010101000000-000000000000
