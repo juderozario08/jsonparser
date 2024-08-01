@@ -1,5 +1,9 @@
 package parser
 
+import (
+	"strconv"
+)
+
 /*
 Expected Input:
 {
@@ -41,11 +45,6 @@ Expected output:
 ]
 */
 
-import (
-	"errors"
-	"fmt"
-)
-
 type TokenType int
 
 const (
@@ -59,105 +58,56 @@ const (
 	TokenNumber
 	TokenComma
 	TokenColon
-	TokenTrue
-	TokenFalse
+	TokenBool
 	TokenNull
 )
-
-var tokenVal = map[any]TokenType{
-	"{":     TokenBraceOpen,
-	"}":     TokenBraceClose,
-	"[":     TokenSquareOpen,
-	"]":     TokenSquareClose,
-	"(":     TokenBracketOpen,
-	")":     TokenBracketClose,
-	",":     TokenComma,
-	":":     TokenColon,
-	"true":  TokenTrue,
-	"false": TokenFalse,
-	"null":  TokenNull,
-}
 
 type Token struct {
 	Type  TokenType
 	Value string
 }
 
-func ExtractKeywords(tokens []string) string {
-	return ""
-}
-
-func Tokenize(input string) string {
-	return ""
-}
-
-func ValidateSyntax(tokens []string) bool {
-	stack := make([]string, 0)
-	for _, token := range tokens {
-		value, exists := tokenVal[token]
-		// Change this to an if condition and fix the test case not working
-		if exists {
-			switch value {
-			case TokenBraceOpen | TokenSquareOpen | TokenBracketOpen:
-				Push(&stack, token)
-				fmt.Println(stack)
-			case TokenBracketClose:
-				elem, err := LastElement(&stack)
-				if err != nil || tokenVal[elem] != TokenBracketOpen {
-					return false
-				}
-				_, _ = Pop(&stack)
-				fmt.Println(stack)
-			case TokenSquareClose:
-				elem, err := LastElement(&stack)
-				if err != nil || tokenVal[elem] != TokenSquareOpen {
-					return false
-				}
-				_, _ = Pop(&stack)
-				fmt.Println(stack)
-			case TokenBraceClose:
-				elem, err := LastElement(&stack)
-				if err != nil || tokenVal[elem] != TokenBracketOpen {
-					return false
-				}
-				_, _ = Pop(&stack)
-				fmt.Println(stack)
-			}
-		}
-	}
-	return true
-}
-
 func Tokenizer(input string) []Token {
+	tokens := make([]Token, 0)
 	for i := 0; i < len(input); {
 		character := string(input[i])
-		fmt.Println(character)
+		switch character {
+		case "{":
+			tokens = append(tokens, Token{Type: TokenBraceOpen, Value: character})
+		case "}":
+			tokens = append(tokens, Token{Type: TokenBraceClose, Value: character})
+		case "[":
+			tokens = append(tokens, Token{Type: TokenSquareOpen, Value: character})
+		case "]":
+			tokens = append(tokens, Token{Type: TokenSquareClose, Value: character})
+		case "(":
+			tokens = append(tokens, Token{Type: TokenBracketOpen, Value: character})
+		case ")":
+			tokens = append(tokens, Token{Type: TokenBracketClose, Value: character})
+		case ",":
+			tokens = append(tokens, Token{Type: TokenComma, Value: character})
+		case ":":
+			tokens = append(tokens, Token{Type: TokenColon, Value: character})
+		case "\"":
+			val := ""
+			for i += 1; string(input[i]) != "\""; i++ {
+				val += string(input[i])
+			}
+			_, err := strconv.Atoi(val)
+			if err != nil {
+				switch val {
+				case "false", "true":
+					tokens = append(tokens, Token{Type: TokenBool, Value: val})
+				case "null":
+					tokens = append(tokens, Token{Type: TokenNull, Value: val})
+				default:
+					tokens = append(tokens, Token{Type: TokenString, Value: val})
+				}
+			} else {
+				tokens = append(tokens, Token{Type: TokenNumber, Value: val})
+			}
+		}
 		i++
 	}
-	return []Token{}
-}
-
-func GetValueFromString() {
-
-}
-
-func Push(stack *[]string, value string) {
-	*stack = append(*stack, value)
-}
-
-func Pop(stack *[]string) (string, error) {
-	if len(*stack) > 0 {
-		value := (*stack)[len(*stack)-1]
-		*stack = (*stack)[:len(*stack)-1]
-		return value, nil
-	}
-	return "", errors.New("ARRAY CONTAINS 0 ELEMENTS")
-}
-
-func LastElement(stack *[]string) (string, error) {
-	arr := *stack
-	if len(arr) != 0 {
-		return arr[len(arr)-1], nil
-	}
-	return "", errors.New("INVALID INDEX")
+	return tokens
 }

@@ -6,14 +6,18 @@ import (
 )
 
 func main() {
-	tests := []struct {
-		tokens   []string
-		expected bool
-	}{
-		{[]string{"{", "(", ")", "}"}, true},
-		{[]string{"{", "(", "]", "}"}, false},
+	tests := []string{
+		`{
+			"key": "value",
+			"key2": "100"
+			"key3": "null"
+			"key4": []
+		}
+		`,
 	}
 	for _, test := range tests {
-		fmt.Println(parser.ValidateSyntax(test.tokens))
+		for _, token := range parser.Tokenizer(test) {
+			fmt.Println(token.Value)
+		}
 	}
 }
