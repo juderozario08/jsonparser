@@ -2,8 +2,6 @@ package parser
 
 import (
 	"jsonparser/tokenizer"
-
-	"github.com/golang-collections/collections/stack"
 )
 
 type ASTNode interface {
@@ -38,6 +36,8 @@ type NullNode struct {
 	Type string
 }
 
+var result map[string]interface{}
+
 func (n ObjectNode) GetType() string  { return n.Type }
 func (n ArrayNode) GetType() string   { return n.Type }
 func (n StringNode) GetType() string  { return n.Type }
@@ -45,43 +45,24 @@ func (n NumberNode) GetType() string  { return n.Type }
 func (n BooleanNode) GetType() string { return n.Type }
 func (n NullNode) GetType() string    { return n.Type }
 
-// Implement the Parser function
 func Parser(tokens tokenizer.Tokens) (ASTNode, error) {
+	for i := 0; i < len(tokens); i++ {
+		token := tokens[i].Type
+	}
 	return nil, nil
 }
 
 // This will handle the logic of parsing all data in a switch statement
-func ParseValue() (ASTNode, error) {
+func ParseAndValidate() (ASTNode, error) {
 	return nil, nil
 }
 
 // This will specifically handle how to parse an object
-func ParseObject() (ASTNode, error) {
+func ParseAndValidateObject() (ASTNode, error) {
 	return nil, nil
 }
 
 // This will specifially handle how to parse an array
-func ParseArray() (ASTNode, error) {
+func ParseAndValidateArray() (ASTNode, error) {
 	return nil, nil
-}
-
-func ValidateSyntax(tokens tokenizer.Tokens) bool {
-	st := stack.New()
-	for _, token := range tokens {
-		switch token.Type {
-		case tokenizer.TokenBraceOpen, tokenizer.TokenBracketOpen:
-			st.Push(token.Value)
-		case tokenizer.TokenSquareOpen:
-
-		}
-	}
-	return true
-}
-
-func ValidateArraySyntax() bool {
-	return false
-}
-
-func ValidateObject() bool {
-	return false
 }
