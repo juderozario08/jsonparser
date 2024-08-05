@@ -156,6 +156,34 @@ func ParseAndValidateObject(tokens *tokenizer.Tokens, i *int) (ObjectNode, error
 }
 
 func ParseAndValidateArray(tokens *tokenizer.Tokens, i *int) (ArrayNode, error) {
-	st := stack.New()
-	return ArrayNode{}, nil
+	bracketChecker := stack.New()
+	key := (*tokens)[*i].Value
+	*i += 2
+	bracketChecker.Push((*tokens)[*i])
+	res := make([]ASTNode, 0)
+
+	for ; (*tokens)[*i].Type != tokenizer.TokenSquareClose; *i++ {
+
+		if (*tokens)[*i].Type == tokenizer.TokenSquareOpen {
+			bracketChecker.Push((*tokens)[*i])
+		}
+
+		if (*tokens)[*i].Type == tokenizer.TokenSquareClose {
+			bracketChecker.Pop()
+		}
+
+		if bracketChecker.Len() == 0 {
+			return ArrayNode{}, errors.New("JSON Syntax is invalid")
+		}
+
+		node, err := ParseAndValidate(tokens, i)
+
+		if err != nil {
+			return ArrayNode{}, errors.New("SOMETHING Went wrong")
+		}
+
+		res = append(res, node)
+
+	}
+	return ArrayNode{Key: key, Value: res}, nil
 }
