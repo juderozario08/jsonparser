@@ -39,28 +39,22 @@ func Tokenizer(input string) Tokens {
 		switch character {
 		case "{":
 			tokens = append(tokens, Token{Type: TokenBraceOpen, Value: character})
-			st.Push(character)
-		case "}":
-			tokens = append(tokens, Token{Type: TokenBraceClose, Value: character})
-			if st.Pop() == nil {
-				panic("Invalid Syntax during creating Tokens")
-			}
+			st.Push(TokenBraceOpen)
 		case "[":
 			tokens = append(tokens, Token{Type: TokenSquareOpen, Value: character})
-			st.Push(character)
-		case "]":
-			tokens = append(tokens, Token{Type: TokenSquareClose, Value: character})
-			if st.Pop() == nil {
-				panic("Invalid Syntax during creating Tokens")
-			}
+			st.Push(TokenSquareOpen)
 		case "(":
 			tokens = append(tokens, Token{Type: TokenBracketOpen, Value: character})
-			st.Push(character)
+			st.Push(TokenBracketOpen)
+		case "}":
+			tokens = append(tokens, Token{Type: TokenBraceClose, Value: character})
+			PopError(st.Pop())
+		case "]":
+			tokens = append(tokens, Token{Type: TokenSquareClose, Value: character})
+			PopError(st.Pop())
 		case ")":
 			tokens = append(tokens, Token{Type: TokenBracketClose, Value: character})
-			if st.Pop() == nil {
-				panic("Invalid Syntax during creating Tokens")
-			}
+			PopError(st.Pop())
 		case ",":
 			tokens = append(tokens, Token{Type: TokenComma, Value: character})
 		case ":":
@@ -99,4 +93,22 @@ func (tokens *Tokens) IsEqual(otherTokens Tokens) bool {
 		}
 	}
 	return true
+}
+
+func PopError(popped interface{}) {
+	switch popped {
+	case TokenBracketClose:
+		if popped == nil || popped != TokenBracketOpen {
+			panic("JSON Syntax Invalid")
+		}
+	case TokenBraceClose:
+		if popped == nil || popped != TokenBraceOpen {
+			panic("JSON Syntax Invalid")
+		}
+	case TokenSquareClose:
+		if popped == nil || popped != TokenSquareOpen {
+			panic("JSON Syntax Invalid")
+		}
+	}
+
 }

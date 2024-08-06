@@ -49,7 +49,7 @@ func main() {
 }
 
 func TestArrayParser() {
-	tests := tokenizer.Tokens{
+	/* tests := tokenizer.Tokens{
 		{Type: tokenizer.TokenSquareOpen, Value: "["},
 		{Type: tokenizer.TokenSquareOpen, Value: "["},
 		{Type: tokenizer.TokenSquareOpen, Value: "["},
@@ -94,7 +94,18 @@ func TestArrayParser() {
 		{Type: tokenizer.TokenSquareClose, Value: "]"},
 		{Type: tokenizer.TokenSquareClose, Value: "]"},
 		// {Type: tokenizer.TokenSquareClose, Value: "]"},
-	}
+	} */
+	test := tokenizer.Tokenizer(`[
+			[
+				["Jude" "Sara"] ["2", "true"] ["nil", "false"]
+			]
+			[
+				["Jude" "Sara"] ["2", "true"] ["nil", "false"]
+			]
+			[
+				["Jude" "Sara"] ["2", "true"] ["nil", "false"]
+			]
+		]`)
 	expected := []interface{}{
 		[]interface{}{
 			[]interface{}{"Jude", "Sara"},
@@ -109,15 +120,15 @@ func TestArrayParser() {
 		[]interface{}{
 			[]interface{}{"Jude", "Sara"},
 			[]interface{}{2.0, true},
-			[]interface{}{nil, true},
+			[]interface{}{nil, false},
 		},
 	}
 	i := 0
-	result, err := parser.ParseAndValidateArray(&tests, &i)
+	result, err := parser.ParseAndValidateArray(&test, &i)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	if IsEqual(result, expected) {
+	if !IsEqual(result, expected) {
 		fmt.Printf("Want \n%v and got \n%v\n", result, expected)
 	}
 }
