@@ -3,6 +3,8 @@ package tokenizer
 import (
 	"strconv"
 	"strings"
+
+	"github.com/golang-collections/collections/stack"
 )
 
 type TokenType int
@@ -30,22 +32,35 @@ type Token struct {
 type Tokens []Token
 
 func Tokenizer(input string) Tokens {
+	st := stack.New()
 	tokens := make([]Token, 0)
 	for i := 0; i < len(input); {
 		character := string(input[i])
 		switch character {
 		case "{":
 			tokens = append(tokens, Token{Type: TokenBraceOpen, Value: character})
+			st.Push(character)
 		case "}":
 			tokens = append(tokens, Token{Type: TokenBraceClose, Value: character})
+			if st.Pop() == nil {
+				panic("Invalid JSON")
+			}
 		case "[":
 			tokens = append(tokens, Token{Type: TokenSquareOpen, Value: character})
+			st.Push(character)
 		case "]":
 			tokens = append(tokens, Token{Type: TokenSquareClose, Value: character})
+			if st.Pop() == nil {
+				panic("Invalid JSON")
+			}
 		case "(":
 			tokens = append(tokens, Token{Type: TokenBracketOpen, Value: character})
+			st.Push(character)
 		case ")":
 			tokens = append(tokens, Token{Type: TokenBracketClose, Value: character})
+			if st.Pop() == nil {
+				panic("Invalid JSON")
+			}
 		case ",":
 			tokens = append(tokens, Token{Type: TokenComma, Value: character})
 		case ":":

@@ -170,7 +170,7 @@ func ParseAndValidateArray(tokens *tokenizer.Tokens, i *int) ([]interface{}, err
 	*i++
 	res := make([]interface{}, 0)
 
-	for ; (*tokens)[*i].Type != tokenizer.TokenSquareClose; *i++ {
+	for ; (*tokens)[*i].Type != tokenizer.TokenSquareClose || bracketChecker.Len() == 0; *i++ {
 		switch (*tokens)[*i].Type {
 		case tokenizer.TokenString:
 			res = append(res, (*tokens)[*i].Value)
