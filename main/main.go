@@ -95,42 +95,63 @@ func TestArrayParser() {
 		{Type: tokenizer.TokenSquareClose, Value: "]"},
 		// {Type: tokenizer.TokenSquareClose, Value: "]"},
 	} */
-	test := tokenizer.Tokenizer(`[
-			[
-				["Jude" "Sara"] ["2", "true"] ["nil", "false"]
-			]
-			[
-				["Jude" "Sara"] ["2", "true"] ["nil", "false"]
-			]
-			[
-				["Jude" "Sara"] ["2", "true"] ["nil", "false"]
-			]
-		]`)
-	expected := []interface{}{
-		[]interface{}{
-			[]interface{}{"Jude", "Sara"},
-			[]interface{}{2.0, true},
-			[]interface{}{nil, false},
-		},
-		[]interface{}{
-			[]interface{}{"Jude", "Sara"},
-			[]interface{}{2.0, true},
-			[]interface{}{nil, false},
-		},
-		[]interface{}{
-			[]interface{}{"Jude", "Sara"},
-			[]interface{}{2.0, true},
-			[]interface{}{nil, false},
-		},
-	}
-	i := 0
-	result, err := parser.ParseAndValidateArray(&test, &i)
+	// test := tokenizer.Tokenizer(`{
+	// 	"name":[
+	// 			[
+	// 				["Jude" "Sara"], ["2", "true"], ["null", "false"]
+	// 			],
+	// 			[
+	// 				["Jude" "Sara"], ["2", "true"], ["null", "false"]
+	// 			],
+	// 			[
+	// 				["Jude" "Sara"], ["2", "true"], ["null", "false"]
+	// 			]
+	// 		]
+	// 	}`)
+	// expected := []interface{}{
+	// 	[]interface{}{
+	// 		[]interface{}{"Jude", "Sara"},
+	// 		[]interface{}{2.0, true},
+	// 		[]interface{}{nil, false},
+	// 	},
+	// 	[]interface{}{
+	// 		[]interface{}{"Jude", "Sara"},
+	// 		[]interface{}{2.0, true},
+	// 		[]interface{}{nil, false},
+	// 	},
+	// 	[]interface{}{
+	// 		[]interface{}{"Jude", "Sara"},
+	// 		[]interface{}{2.0, true},
+	// 		[]interface{}{nil, false},
+	// 	},
+	// }
+	result, err := parser.Parser(tokenizer.Tokenizer(`{
+		"id": "6108snoa821601",
+		"arr":[
+				[
+					["Jude" "Sara"], ["2", "true"], ["null", "false"]
+				],
+				[
+					["Jude" "Sara"], ["2", "true"], ["null", "false"]
+				],
+				[
+					["Jude" "Sara"], ["2", "true"], ["null", "false"]
+				]
+			],
+		"age": "20",
+		"something": [],
+		"nullValue": "null"
+		"boolean": "true"
+		}`))
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	if !IsEqual(result, expected) {
-		fmt.Printf("Want \n%v and got \n%v\n", result, expected)
+	for k, v := range result {
+		fmt.Println(k, v)
 	}
+	// if IsEqual(result, expected) {
+	// 	fmt.Printf("Want \n%v \nand got \n%v\n", result, expected)
+	// }
 }
 
 func IsEqual(res []interface{}, exp []interface{}) bool {

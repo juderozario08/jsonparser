@@ -16,7 +16,7 @@ type ASTNode interface {
 
 type ObjectNode struct {
 	Key   string
-	Value map[string]ASTNode
+	Value map[string]interface{}
 }
 
 type ArrayNode struct {
@@ -70,7 +70,7 @@ func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
 
 		token := tokens[i]
 
-		if token.Type == tokenizer.TokenNumber &&
+		if token.Type != tokenizer.TokenString &&
 			tokens[i+1].Type == tokenizer.TokenColon {
 			return nil, errors.New("JSON Syntax is invalid")
 		}
@@ -96,72 +96,56 @@ func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
 
 func ParseAndValidate(tokens *tokenizer.Tokens, i *int) (ASTNode, error) {
 	key := (*tokens)[*i].Value
-	switch (*tokens)[*i+2].Type {
+	*i += 2
+	switch (*tokens)[*i].Type {
 
 	case tokenizer.TokenSquareOpen:
-		*i += 2
 		value, err := ParseAndValidateArray(tokens, i)
 		if err != nil {
 			return nil, errors.New("JSON Syntax is invalid for array")
 		}
-		node := ArrayNode{
-			Key:   key,
-			Value: value,
-		}
-		return node, nil
+		return ArrayNode{Key: key, Value: value}, nil
 
 	case tokenizer.TokenBraceOpen:
 		value, err := ParseAndValidateObject(tokens, i)
 		if err != nil {
 			return nil, errors.New("JSON Syntax is invalid for object as value")
 		}
-		node := ObjectNode{
-			Key:   key,
-			Value: value,
-		}
-		return node, nil
+		return ObjectNode{Key: key, Value: value}, nil
 
 	case tokenizer.TokenString:
-		node := StringNode{
-			Key:   (*tokens)[*i].Value,
-			Value: (*tokens)[*i+2].Value,
-		}
-		*i += 2
-		return node, nil
+		return StringNode{Key: key, Value: (*tokens)[*i].Value}, nil
 
 	case tokenizer.TokenNumber:
-		num, err := strconv.ParseFloat((*tokens)[*i+2].Value, 64)
+		num, err := strconv.ParseFloat((*tokens)[*i].Value, 64)
 		if err != nil {
 			return nil, errors.New("JSON Syntax for number is invalid")
 		}
-		node := NumberNode{
-			Key:   (*tokens)[*i].Value,
-			Value: num,
-		}
-		*i += 2
-		return node, nil
+		return NumberNode{Key: key, Value: num}, nil
 
 	case tokenizer.TokenBool:
-		node := BooleanNode{
-			Key:   (*tokens)[*i].Value,
-			Value: (*tokens)[*i+2].Value == "true",
-		}
-		*i += 2
-		return node, nil
+		return BooleanNode{Key: key, Value: (*tokens)[*i].Value == "true"}, nil
 
 	case tokenizer.TokenNull:
-		node := NullNode{
-			Key: (*tokens)[*i].Value,
-		}
-		*i += 2
-		return node, nil
+		return NullNode{Key: key}, nil
 	}
 
 	return nil, errors.New("JSON Syntax is invalid")
 }
 
-func ParseAndValidateObject(tokens *tokenizer.Tokens, i *int) (map[string]ASTNode, error) {
-	return nil, nil
+func ParseAndValidateObject(tokens *tokenizer.Tokens, i *int) (map[string]interface{}, error) {
+	result := make(map[string]interface{})
+	st := stack.New()
+	st.Push((*tokens)[*i].Type)
+	*i++
+	for ; st.Len() > 0; *i++ {
+		val, err := ParseAndValidate(tokens, i)
+		if err != nil {
+			return nil, errors.New("JSON Syntax Invalid")
+		}
+		result[val.GetKey()] = val.GetValue()
+	}
+	return result, nil
 }
 
 func ParseAndValidateArray(tokens *tokenizer.Tokens, i *int) ([]interface{}, error) {
@@ -170,7 +154,7 @@ func ParseAndValidateArray(tokens *tokenizer.Tokens, i *int) ([]interface{}, err
 	*i++
 	res := make([]interface{}, 0)
 
-	for ; (*tokens)[*i].Type != tokenizer.TokenSquareClose || bracketChecker.Len() == 0; *i++ {
+	for ; (*tokens)[*i].Type != tokenizer.TokenSquareClose; *i++ {
 		switch (*tokens)[*i].Type {
 		case tokenizer.TokenString:
 			res = append(res, (*tokens)[*i].Value)
