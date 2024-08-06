@@ -49,37 +49,93 @@ func main() {
 }
 
 func TestArrayParser() {
-	tests :=
-		tokenizer.Tokens{
-			{Type: tokenizer.TokenSquareOpen, Value: "["},
-			{Type: tokenizer.TokenString, Value: "Jude"},
-			{Type: tokenizer.TokenString, Value: "Sara"},
-			{Type: tokenizer.TokenNumber, Value: "2"},
-			{Type: tokenizer.TokenBool, Value: "true"},
-			{Type: tokenizer.TokenNull, Value: "nil"},
-			{Type: tokenizer.TokenBool, Value: "false"},
-			{Type: tokenizer.TokenSquareClose, Value: "]"},
-		}
-	expected := []interface{}{"Jude", "Sara", 2.0, true, nil, false}
+	tests := tokenizer.Tokens{
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenString, Value: "Jude"},
+		{Type: tokenizer.TokenString, Value: "Sara"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenNumber, Value: "2"},
+		{Type: tokenizer.TokenBool, Value: "true"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenNull, Value: "nil"},
+		{Type: tokenizer.TokenBool, Value: "false"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenString, Value: "Jude"},
+		{Type: tokenizer.TokenString, Value: "Sara"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenNumber, Value: "2"},
+		{Type: tokenizer.TokenBool, Value: "true"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenNull, Value: "nil"},
+		{Type: tokenizer.TokenBool, Value: "false"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenString, Value: "Jude"},
+		{Type: tokenizer.TokenString, Value: "Sara"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenNumber, Value: "2"},
+		{Type: tokenizer.TokenBool, Value: "true"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareOpen, Value: "["},
+		{Type: tokenizer.TokenNull, Value: "nil"},
+		{Type: tokenizer.TokenBool, Value: "false"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		{Type: tokenizer.TokenSquareClose, Value: "]"},
+		// {Type: tokenizer.TokenSquareClose, Value: "]"},
+	}
+	expected := []interface{}{
+		[]interface{}{
+			[]interface{}{"Jude", "Sara"},
+			[]interface{}{2.0, true},
+			[]interface{}{nil, false},
+		},
+		[]interface{}{
+			[]interface{}{"Jude", "Sara"},
+			[]interface{}{2.0, true},
+			[]interface{}{nil, false},
+		},
+		[]interface{}{
+			[]interface{}{"Jude", "Sara"},
+			[]interface{}{2.0, true},
+			[]interface{}{nil, true},
+		},
+	}
 	i := 0
 	result, err := parser.ParseAndValidateArray(&tests, &i)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	if !isEqual(result, expected) {
-		fmt.Printf("Test failed, for %v. Want \n%v and got \n%v", tests, result, expected)
+	if IsEqual(result, expected) {
+		fmt.Printf("Want \n%v and got \n%v\n", result, expected)
 	}
 }
 
-func isEqual(res []interface{}, expected []interface{}) bool {
-	if len(res) != len(expected) {
-		fmt.Println("Size does not match")
+func IsEqual(res []interface{}, exp []interface{}) bool {
+	if len(res) != len(exp) {
 		return false
 	}
 	for i := 0; i < len(res); i++ {
-		if res[i] != expected[i] {
-			fmt.Println(res[i], expected[i])
-			return false
+		switch res[i].(type) {
+		case []interface{}:
+			if !IsEqual(res[i].([]interface{}), exp[i].([]interface{})) {
+				return false
+			}
+		default:
+			if res[i] != exp[i] {
+				return false
+			}
 		}
 	}
 	return true
