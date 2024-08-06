@@ -43,7 +43,7 @@ func Tokenizer(input string) Tokens {
 		case "}":
 			tokens = append(tokens, Token{Type: TokenBraceClose, Value: character})
 			if st.Pop() == nil {
-				panic("Invalid JSON")
+				panic("Invalid Syntax during creating Tokens")
 			}
 		case "[":
 			tokens = append(tokens, Token{Type: TokenSquareOpen, Value: character})
@@ -51,7 +51,7 @@ func Tokenizer(input string) Tokens {
 		case "]":
 			tokens = append(tokens, Token{Type: TokenSquareClose, Value: character})
 			if st.Pop() == nil {
-				panic("Invalid JSON")
+				panic("Invalid Syntax during creating Tokens")
 			}
 		case "(":
 			tokens = append(tokens, Token{Type: TokenBracketOpen, Value: character})
@@ -59,7 +59,7 @@ func Tokenizer(input string) Tokens {
 		case ")":
 			tokens = append(tokens, Token{Type: TokenBracketClose, Value: character})
 			if st.Pop() == nil {
-				panic("Invalid JSON")
+				panic("Invalid Syntax during creating Tokens")
 			}
 		case ",":
 			tokens = append(tokens, Token{Type: TokenComma, Value: character})
