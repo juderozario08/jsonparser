@@ -59,11 +59,7 @@ func IsEqual(res []interface{}, exp []interface{}) bool {
 func TestObjectParser() {
 	test := `
 		{
-			"people": [{
-				"name": "Jude",
-				"age": "20",
-				"something": ["hello", "world"],
-			}]
+			"people": [{ "name": "Jude", "something": [{"hello": "sara"}] }]
 		}
 	`
 	result, err := parser.Parser(tokenizer.Tokenizer(test))
