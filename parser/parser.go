@@ -2,8 +2,8 @@ package parser
 
 import (
 	"errors"
+	"fmt"
 	"jsonparser/tokenizer"
-	"runtime"
 	"strconv"
 
 	"github.com/golang-collections/collections/stack"
@@ -64,19 +64,16 @@ func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
 	for i := 1; i < len(tokens)-1; i++ {
 
 		token := tokens[i]
-		if token.Type != tokenizer.TokenString &&
-			tokens[i+1].Type == tokenizer.TokenColon {
-			return nil, errors.New("KEY must be a string followed by a colon")
-		} else if token.Type == tokenizer.TokenString &&
+		fmt.Println(token)
+		if tokenizer.TokenComma == token.Type {
+			continue
+		} else if token.Type != tokenizer.TokenString ||
 			tokens[i+1].Type != tokenizer.TokenColon {
-			return nil, errors.New("JSON Syntax is invalid")
+			return nil, errors.New("KEY must be a string followed by a colon")
 		} else {
-			if tokenizer.TokenComma == token.Type {
-				continue
-			}
 			node, err := ParseAndValidate(&tokens, &i)
 			if err != nil {
-				return nil, errors.New(err.Error())
+				return nil, err
 			}
 			result[node.GetKey()] = node.GetValue()
 		}
@@ -91,18 +88,34 @@ func ParseAndValidate(tokens *tokenizer.Tokens, i *int) (ASTNode, error) {
 	switch (*tokens)[*i].Type {
 
 	case tokenizer.TokenSquareOpen:
-		value, err := ParseAndValidateArray(tokens, i)
+		st := stack.New()
+		arrayTokens := make(tokenizer.Tokens, 0)
+		for ; st.Len() > 0 && *i < len(*tokens)-1; *i++ {
+			err := BracketCheck((*tokens)[*i], &st)
+			if err != nil {
+				return nil, err
+			}
+			arrayTokens = append(arrayTokens, (*tokens)[*i])
+		}
+		value, err := ParseAndValidateArray(arrayTokens)
 		if err != nil {
-			_, _, line, _ := runtime.Caller(0)
-			return nil, errors.New(err.Error() + " called at: " + strconv.Itoa(line))
+			return nil, err
 		}
 		return ArrayNode{Key: key, Value: value}, nil
 
 	case tokenizer.TokenBraceOpen:
-		value, err := ParseAndValidateObject(tokens, i)
+		st := stack.New()
+		objectTokens := make(tokenizer.Tokens, 0)
+		for ; st.Len() > 0 && *i < len(*tokens)-1; *i++ {
+			err := BracketCheck((*tokens)[*i], &st)
+			if err != nil {
+				return nil, err
+			}
+			objectTokens = append(objectTokens, (*tokens)[*i])
+		}
+		value, err := ParseAndValidateObject(objectTokens)
 		if err != nil {
-			_, _, line, _ := runtime.Caller(0)
-			return nil, errors.New(err.Error() + " called at: " + strconv.Itoa(line))
+			return nil, err
 		}
 		return ObjectNode{Key: key, Value: value}, nil
 
@@ -112,8 +125,7 @@ func ParseAndValidate(tokens *tokenizer.Tokens, i *int) (ASTNode, error) {
 	case tokenizer.TokenNumber:
 		num, err := strconv.ParseFloat((*tokens)[*i].Value, 64)
 		if err != nil {
-			_, _, line, _ := runtime.Caller(0)
-			return nil, errors.New(err.Error() + " " + strconv.Itoa(line))
+			return nil, err
 		}
 		return NumberNode{Key: key, Value: num}, nil
 
@@ -123,74 +135,46 @@ func ParseAndValidate(tokens *tokenizer.Tokens, i *int) (ASTNode, error) {
 	case tokenizer.TokenNull:
 		return NullNode{Key: key}, nil
 	}
-	_, _, line, _ := runtime.Caller(0)
-	return nil, errors.New("Something went wrong when validating and parsing: " + strconv.Itoa(line))
+	return nil, errors.New("Something went wrong when validating and parsing")
 }
 
-func ParseAndValidateObject(tokens *tokenizer.Tokens, i *int) (map[string]interface{}, error) {
-	st := stack.New()
-	st.Push((*tokens)[*i].Type)
-	tkns := make(tokenizer.Tokens, 0)
-	tkns = append(tkns, (*tokens)[*i])
-	*i++
-	for ; st.Len() > 0 && *i < len(*tokens)-1; *i++ {
-		tkns = append(tkns, (*tokens)[*i])
-		switch (*tokens)[*i].Type {
-		case tokenizer.TokenBraceOpen:
-			st.Push(tokenizer.TokenBraceOpen)
-		case tokenizer.TokenBraceClose:
-			if st.Pop() == nil {
-				_, _, line, _ := runtime.Caller(0)
-				return nil, errors.New("JSON Brace not closed properly line: " + strconv.Itoa(line))
-			}
-		}
-	}
-	val, err := Parser(tkns)
-	if err != nil {
-		_, _, line, _ := runtime.Caller(0)
-		return nil, errors.New(err.Error() + " " + strconv.Itoa(line))
-	}
-	return val, nil
-}
-
-func ParseAndValidateArray(tokens *tokenizer.Tokens, i *int) ([]interface{}, error) {
-	st := stack.New()
-	st.Push((*tokens)[*i])
-	*i++
-	res := make([]interface{}, 0)
-
-	for ; st.Len() > 0 && (*tokens)[*i].Type != tokenizer.TokenSquareClose && *i < len(*tokens)-1; *i++ {
-		switch (*tokens)[*i].Type {
-		case tokenizer.TokenComma:
-			continue
-		case tokenizer.TokenString:
-			res = append(res, (*tokens)[*i].Value)
-		case tokenizer.TokenNumber:
-			num, _ := strconv.ParseFloat((*tokens)[*i].Value, 64)
-			res = append(res, num)
-		case tokenizer.TokenBool:
-			res = append(res, (*tokens)[*i].Value == "true")
-		case tokenizer.TokenNull:
-			res = append(res, nil)
-		case tokenizer.TokenSquareOpen:
-			val, err := ParseAndValidateArray(tokens, i)
-			if err != nil {
-				return nil, errors.New(err.Error())
-			}
-			res = append(res, val)
-		case tokenizer.TokenBraceOpen:
-			value, err := ParseAndValidateObject(tokens, i)
-			if err != nil {
-				return nil, errors.New(err.Error())
-			}
-			res = append(res, value)
-		}
-	}
-
-	if st.Pop() == nil || st.Len() > 0 {
-		_, _, line, _ := runtime.Caller(0)
-		return nil, errors.New("Final bracket syntax for array is invalid " + strconv.Itoa(line))
-	}
+func ParseAndValidateObject(tokens tokenizer.Tokens) (map[string]interface{}, error) {
+	res := make(map[string]interface{})
 	return res, nil
+}
+
+func ParseAndValidateArray(tokens tokenizer.Tokens) ([]interface{}, error) {
+	res := make([]interface{}, 0)
+	return res, nil
+}
+
+func BracketCheck(token tokenizer.Token, st **stack.Stack) error {
+	switch token.Type {
+	case tokenizer.TokenSquareOpen:
+		(*st).Push(token.Type)
+	case tokenizer.TokenBraceOpen:
+		(*st).Push(token.Type)
+	case tokenizer.TokenBracketOpen:
+		(*st).Push(token.Type)
+	case tokenizer.TokenSquareClose:
+		popped := (*st).Pop()
+		if popped == nil || popped != tokenizer.TokenSquareOpen {
+			return errors.New("Wrong syntax for object. Square brackets do not match")
+		}
+	case tokenizer.TokenBraceClose:
+		popped := (*st).Pop()
+		if popped == nil || popped != tokenizer.TokenBraceOpen {
+			return errors.New("Wrong syntax for object. Curly braces do not match")
+		}
+	case tokenizer.TokenBracketClose:
+		popped := (*st).Pop()
+		if popped == nil || popped != tokenizer.TokenBracketOpen {
+			return errors.New("Wrong syntax for object. Brackets do not match")
+		}
+	}
+	return nil
+}
+
+func CheckComma(tokens *tokenizer.Tokens, i *int) {
 
 }
