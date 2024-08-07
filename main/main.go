@@ -7,11 +7,7 @@ import (
 )
 
 func main() {
-	TestObjectParser()
-}
-
-func TestArrayParser() {
-	result, err := parser.Parser(tokenizer.Tokenizer(`{
+	tokens := tokenizer.Tokenizer(`{
 		"id": "6108snoa821601",
 		"arr":[
 				[
@@ -25,48 +21,19 @@ func TestArrayParser() {
 				]
 			],
 		"age": "20",
-		"something": [],
-		"nullValue": "null"
+		"something": [{
+			"key": "value",
+			"key2": "value2"
+		},{
+			"key": "value",
+			"key2": "value2"
+		}],
+		"nullValue": "null",
 		"boolean": "true"
-		}`))
+		}`)
+	result, err := parser.Parser(tokens)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	for k, v := range result {
-		fmt.Println(k, v)
-	}
-}
-
-func IsEqual(res []interface{}, exp []interface{}) bool {
-	if len(res) != len(exp) {
-		return false
-	}
-	for i := 0; i < len(res); i++ {
-		switch res[i].(type) {
-		case []interface{}:
-			if !IsEqual(res[i].([]interface{}), exp[i].([]interface{})) {
-				return false
-			}
-		default:
-			if res[i] != exp[i] {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func TestObjectParser() {
-	test := `
-		{
-			"people": [{ "name": "Jude", "something": [{"hello": "sara"}] }]
-		}
-	`
-	result, err := parser.Parser(tokenizer.Tokenizer(test))
-	if err != nil {
-		println(err.Error())
-	}
-	for k, v := range result {
-		fmt.Println(k, v)
-	}
+	fmt.Println(result["something"])
 }

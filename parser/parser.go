@@ -14,32 +14,26 @@ type ASTNode interface {
 	GetKey() string
 	GetValue() interface{}
 }
-
 type ObjectNode struct {
 	Key   string
 	Value map[string]interface{}
 }
-
 type ArrayNode struct {
 	Key   string
 	Value []interface{}
 }
-
 type StringNode struct {
 	Key   string
 	Value string
 }
-
 type NumberNode struct {
 	Key   string
 	Value float64
 }
-
 type BooleanNode struct {
 	Key   string
 	Value bool
 }
-
 type NullNode struct {
 	Key string
 }
