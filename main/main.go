@@ -7,33 +7,39 @@ import (
 )
 
 func main() {
-	tokens := tokenizer.Tokenizer(`{
+	/* tokens := tokenizer.Tokenizer(`{
 		"id": "6108snoa821601",
-		"arr":[
-				[
-					["Jude", "Sara"], ["2", "true"], ["null", "false"]
-				],
-				[
-					["Jude", "Sara"], ["2", "true"], ["null", "false"]
-				],
-				[
-					["Jude", "Sara"], ["2", "true"], ["null", "false"]
-				]
+	"arr":[
+			[
+				["Jude", "Sara"], ["2", "true"], ["null", "false"]
 			],
-		"age": "20",
-		"something": [{
-			"key": "value",
-			"key2": "value2"
-		},{
-			"key": "value",
-			"key2": "value2"
-		}],
-		"nullValue": "null",
-		"boolean": "true"
-		}`)
+			[
+				["Jude", "Sara"], ["2", "true"], ["null", "false"]
+			],
+			[
+				["Jude", "Sara"], ["2", "true"], ["null", "false"]
+			]
+		],
+	"age": "20",
+	"something": [{
+		"key": "value",
+		"key2": "value2"
+	},{
+		"key": "value",
+		"key2": "value2"
+	}],
+	"nullValue": "null",
+	"boolean": "true"
+	}`) */
+	tokens := tokenizer.Tokenizer(`
+		{
+			"name": "Jude",
+			"people": ["Sara", "Jude"]
+		}
+	`)
 	result, err := parser.Parser(tokens)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	fmt.Println(result["something"])
+	fmt.Println(result)
 }
