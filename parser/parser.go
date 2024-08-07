@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	"jsonparser/tokenizer"
+	"runtime"
 	"strconv"
 
 	"github.com/golang-collections/collections/stack"
@@ -63,7 +64,7 @@ func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
 
 	if tokens[0].Type != tokenizer.TokenBraceOpen ||
 		tokens[len(tokens)-1].Type != tokenizer.TokenBraceClose {
-		return nil, errors.New("JSON Syntax is invalid")
+		return nil, errors.New("JSON brace not closed properly")
 	}
 
 	for i := 1; i < len(tokens)-1; i++ {
@@ -72,16 +73,11 @@ func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
 
 		if token.Type != tokenizer.TokenString &&
 			tokens[i+1].Type == tokenizer.TokenColon {
-			return nil, errors.New("JSON Syntax is invalid")
-		}
-
-		if token.Type == tokenizer.TokenString &&
+			return nil, errors.New("KEY must be a string followed by a colon")
+		} else if token.Type == tokenizer.TokenString &&
 			tokens[i+1].Type != tokenizer.TokenColon {
 			return nil, errors.New("JSON Syntax is invalid")
-		}
-
-		if token.Type == tokenizer.TokenString &&
-			tokens[i+1].Type == tokenizer.TokenColon {
+		} else {
 			node, err := ParseAndValidate(&tokens, &i)
 			if err != nil {
 				return nil, errors.New(err.Error())
@@ -141,14 +137,16 @@ func ParseAndValidateObject(tokens *tokenizer.Tokens, i *int) (map[string]interf
 	*i++
 	for ; st.Len() > 0; *i++ {
 		if (*tokens)[*i].Type == tokenizer.TokenBraceClose {
-			st.Pop()
+			if st.Pop() == nil {
+				_, _, line, _ := runtime.Caller(1)
+				return nil, errors.New("INVALID bracket syntax for JSON object at line: ", line)
+			}
 		} else if (*tokens)[*i].Type == tokenizer.TokenComma {
 			continue
-		}
-		if st.Len() > 0 {
+		} else {
 			val, err := ParseAndValidate(tokens, i)
 			if err != nil {
-				return nil, errors.New("JSON Syntax Invalid for Object")
+				return nil, errors.New("FAILED to parse the object inside of this JSON Line:147")
 			}
 			result[val.GetKey()] = val.GetValue()
 		}

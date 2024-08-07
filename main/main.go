@@ -59,23 +59,18 @@ func IsEqual(res []interface{}, exp []interface{}) bool {
 func TestObjectParser() {
 	test := `
 		{
-			"person": {
+			"people": [{
 				"name": "Jude",
-				"age": "20"
-			}
+				"age": "20",
+				"something": ["hello", "world"],
+			}]
 		}
 	`
-	expected := map[string]interface{}{
-		"person": map[string]interface{}{
-			"name": "Jude",
-			"age":  20,
-		},
-	}
-	tokens := tokenizer.Tokenizer(test)
-	i := 0
-	result, err := parser.ParseAndValidateObject(&tokens, &i)
+	result, err := parser.Parser(tokenizer.Tokenizer(test))
 	if err != nil {
 		println(err.Error())
 	}
-	fmt.Printf("Result: %v\nExpected: %v\n", result, expected)
+	for k, v := range result {
+		fmt.Println(k, v)
+	}
 }
