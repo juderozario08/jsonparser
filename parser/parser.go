@@ -96,6 +96,7 @@ func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
 
 func ParseAndValidate(tokens *tokenizer.Tokens, i *int) (ASTNode, error) {
 	key := (*tokens)[*i].Value
+	println(key)
 	*i += 2
 	switch (*tokens)[*i].Type {
 
@@ -139,11 +140,18 @@ func ParseAndValidateObject(tokens *tokenizer.Tokens, i *int) (map[string]interf
 	st.Push((*tokens)[*i].Type)
 	*i++
 	for ; st.Len() > 0; *i++ {
-		val, err := ParseAndValidate(tokens, i)
-		if err != nil {
-			return nil, errors.New("JSON Syntax Invalid")
+		if (*tokens)[*i].Type == tokenizer.TokenBraceClose {
+			st.Pop()
+		} else if (*tokens)[*i].Type == tokenizer.TokenComma {
+			continue
 		}
-		result[val.GetKey()] = val.GetValue()
+		if st.Len() > 0 {
+			val, err := ParseAndValidate(tokens, i)
+			if err != nil {
+				return nil, errors.New("JSON Syntax Invalid for Object")
+			}
+			result[val.GetKey()] = val.GetValue()
+		}
 	}
 	return result, nil
 }

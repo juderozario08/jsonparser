@@ -7,12 +7,17 @@ import (
 
 type TestStruct struct {
 	Value    string
-	Expected ASTNode
+	Expected interface{}
 }
 
 type TestArrayStruct struct {
 	Value    tokenizer.Tokens
 	Expected ASTNode
+}
+
+type TestObjectStruct struct {
+	Value    string
+	Expected map[string]interface{}
 }
 
 func TestParser(t *testing.T) {
@@ -41,7 +46,7 @@ func TestArrayParser(t *testing.T) {
 			{Type: tokenizer.TokenComma, Value: ","},
 			{Type: tokenizer.TokenBool, Value: "true"},
 			{Type: tokenizer.TokenComma, Value: ","},
-			{Type: tokenizer.TokenNull, Value: "nil"},
+			{Type: tokenizer.TokenNull, Value: "null"},
 			{Type: tokenizer.TokenComma, Value: ","},
 			{Type: tokenizer.TokenBool, Value: "false"},
 			{Type: tokenizer.TokenSquareClose, Value: "]"},
@@ -58,19 +63,23 @@ func TestArrayParser(t *testing.T) {
 }
 
 func TestObjectParser(t *testing.T) {
-	tests := []TestStruct{
-		{Value: `
+	tests := TestObjectStruct{Value: `
 			{
 				"person": {
 					"name": "Jude"
 					"age": "20"
 				}
-			}`, Expected: nil},
-	}
-	for _, test := range tests {
-		result, err := Parser(tokenizer.Tokenizer(test.Value))
-		if err != nil {
-			t.Errorf("Test failed, for %v. Want \n%v and got \n%v", test.Value, result, test.Expected)
-		}
+			}`,
+		Expected: map[string]interface{}{
+			"person": map[string]interface{}{
+				"name": "Jude",
+				"age":  20,
+			},
+		}}
+	tokens := tokenizer.Tokenizer(tests.Value)
+	i := 0
+	result, err := ParseAndValidateObject(&tokens, &i)
+	if err != nil {
+		t.Errorf("Test failed, for %v. Want \n%v and got \n%v", tests.Value, result, tests.Expected)
 	}
 }
