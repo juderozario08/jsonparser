@@ -7,39 +7,20 @@ import (
 )
 
 func main() {
-	/* tokens := tokenizer.Tokenizer(`{
-		"id": "6108snoa821601",
-	"arr":[
-			[
-				["Jude", "Sara"], ["2", "true"], ["null", "false"]
-			],
-			[
-				["Jude", "Sara"], ["2", "true"], ["null", "false"]
-			],
-			[
-				["Jude", "Sara"], ["2", "true"], ["null", "false"]
-			]
-		],
-	"age": "20",
-	"something": [{
-		"key": "value",
-		"key2": "value2"
-	},{
-		"key": "value",
-		"key2": "value2"
-	}],
-	"nullValue": "null",
-	"boolean": "true"
-	}`) */
 	tokens := tokenizer.Tokenizer(`
 		{
-			"name": "Jude",
-			"people": ["Sara", "Jude"]
+			"id": "6108snoa821601",
+			"age": "20",
+			"boolean": "true",
+			"nullValue": {"name": "Jude", "age": "20", "null": "null"},
+			"arr":[ "Jude", "Sara", "2", "true", "null", "false" ],
 		}
 	`)
 	result, err := parser.Parser(tokens)
 	if err != nil {
-		fmt.Println(err.Error())
+		panic(err.Error())
 	}
-	fmt.Println(result)
+	for key, value := range result {
+		fmt.Println(key, value)
+	}
 }
