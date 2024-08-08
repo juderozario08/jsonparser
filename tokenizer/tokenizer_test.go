@@ -10,25 +10,23 @@ type TokenizerTest struct {
 }
 
 func TestTokenizer(t *testing.T) {
-
-	tests :=
-		[]TokenizerTest{
-			{
-				input: `{"Key":"Value","Key2":"Value2"}`,
-				expected: []Token{
-					{Type: TokenBraceOpen, Value: "{"},
-					{Type: TokenString, Value: "Key"},
-					{Type: TokenColon, Value: ":"},
-					{Type: TokenString, Value: "Value"},
-					{Type: TokenComma, Value: ","},
-					{Type: TokenString, Value: "Key2"},
-					{Type: TokenColon, Value: ":"},
-					{Type: TokenString, Value: "Value2"},
-					{Type: TokenBraceClose, Value: "}"},
-				},
+	tests := []TokenizerTest{
+		{
+			input: `{"Key":"Value","Key2":"Value2"}`,
+			expected: []Token{
+				{Type: TokenBraceOpen, Value: "{"},
+				{Type: TokenString, Value: "Key"},
+				{Type: TokenColon, Value: ":"},
+				{Type: TokenString, Value: "Value"},
+				{Type: TokenComma, Value: ","},
+				{Type: TokenString, Value: "Key2"},
+				{Type: TokenColon, Value: ":"},
+				{Type: TokenString, Value: "Value2"},
+				{Type: TokenBraceClose, Value: "}"},
 			},
-			{
-				input: `
+		},
+		{
+			input: `
 					{
 						"id":"120391",
 						"name": "Some Name",
@@ -38,36 +36,36 @@ func TestTokenizer(t *testing.T) {
 						"nullValue": "null"
 					}
 				`,
-				expected: []Token{
-					{Type: TokenBraceOpen, Value: "{"},
-					{Type: TokenString, Value: "id"},
-					{Type: TokenColon, Value: ":"},
-					{Type: TokenNumber, Value: "120391"},
-					{Type: TokenComma, Value: ","},
-					{Type: TokenString, Value: "name"},
-					{Type: TokenColon, Value: ":"},
-					{Type: TokenString, Value: "Some Name"},
-					{Type: TokenComma, Value: ","},
-					{Type: TokenString, Value: "age"},
-					{Type: TokenColon, Value: ":"},
-					{Type: TokenNumber, Value: "20"},
-					{Type: TokenComma, Value: ","},
-					{Type: TokenString, Value: "something"},
-					{Type: TokenColon, Value: ":"},
-					{Type: TokenSquareOpen, Value: "["},
-					{Type: TokenSquareClose, Value: "]"},
-					{Type: TokenComma, Value: ","},
-					{Type: TokenString, Value: "boolean"},
-					{Type: TokenColon, Value: ":"},
-					{Type: TokenBool, Value: "true"},
-					{Type: TokenComma, Value: ","},
-					{Type: TokenString, Value: "nullValue"},
-					{Type: TokenColon, Value: ":"},
-					{Type: TokenNull, Value: "null"},
-					{Type: TokenBraceClose, Value: "}"},
-				},
+			expected: []Token{
+				{Type: TokenBraceOpen, Value: "{"},
+				{Type: TokenString, Value: "id"},
+				{Type: TokenColon, Value: ":"},
+				{Type: TokenNumber, Value: "120391"},
+				{Type: TokenComma, Value: ","},
+				{Type: TokenString, Value: "name"},
+				{Type: TokenColon, Value: ":"},
+				{Type: TokenString, Value: "Some Name"},
+				{Type: TokenComma, Value: ","},
+				{Type: TokenString, Value: "age"},
+				{Type: TokenColon, Value: ":"},
+				{Type: TokenNumber, Value: "20"},
+				{Type: TokenComma, Value: ","},
+				{Type: TokenString, Value: "something"},
+				{Type: TokenColon, Value: ":"},
+				{Type: TokenSquareOpen, Value: "["},
+				{Type: TokenSquareClose, Value: "]"},
+				{Type: TokenComma, Value: ","},
+				{Type: TokenString, Value: "boolean"},
+				{Type: TokenColon, Value: ":"},
+				{Type: TokenBool, Value: "true"},
+				{Type: TokenComma, Value: ","},
+				{Type: TokenString, Value: "nullValue"},
+				{Type: TokenColon, Value: ":"},
+				{Type: TokenNull, Value: "null"},
+				{Type: TokenBraceClose, Value: "}"},
 			},
-		}
+		},
+	}
 
 	for _, test := range tests {
 		result := Tokenizer(test.input)
@@ -75,4 +73,16 @@ func TestTokenizer(t *testing.T) {
 			t.Errorf("Expected %v, got %v", test.expected, result)
 		}
 	}
+}
+
+func (tokens *Tokens) IsEqual(otherTokens Tokens) bool {
+	if len(*tokens) != len(otherTokens) {
+		return false
+	}
+	for i, token := range *tokens {
+		if token != otherTokens[i] {
+			return false
+		}
+	}
+	return true
 }

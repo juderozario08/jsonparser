@@ -2,8 +2,9 @@ package parser
 
 import (
 	"errors"
-	"jsonparser/tokenizer"
 	"strconv"
+
+	"jsonparser/tokenizer"
 
 	"github.com/golang-collections/collections/stack"
 )
@@ -51,13 +52,12 @@ func (o NumberNode) GetValue() interface{}  { return o.Value }
 func (o BooleanNode) GetValue() interface{} { return o.Value }
 func (o NullNode) GetValue() interface{}    { return nil }
 
-func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
-
+func Parse(tokens tokenizer.Tokens) (Value map[string]interface{}, Error error) {
 	result := make(map[string]interface{})
 
 	if tokens[0].Type != tokenizer.TokenBraceOpen ||
 		tokens[len(tokens)-1].Type != tokenizer.TokenBraceClose {
-		return nil, errors.New("JSON brace not closed properly")
+		return nil, errors.New("PARSE: JSON brace not closed properly")
 	}
 
 	needComma := false
@@ -65,7 +65,7 @@ func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
 
 		token := tokens[i]
 		if needComma && token.Type != tokenizer.TokenComma {
-			return nil, errors.New("Comma is missing")
+			return nil, errors.New("PARSE: Comma is missing")
 		}
 		if tokenizer.TokenComma == token.Type {
 			needComma = false
@@ -73,46 +73,39 @@ func Parser(tokens tokenizer.Tokens) (map[string]interface{}, error) {
 		}
 		if token.Type == tokenizer.TokenString &&
 			tokens[i+1].Type == tokenizer.TokenColon {
-			node, err := ParseAndValidate(&tokens, &i)
+			node, err := ToValue(&tokens, &i)
 			needComma = true
 			if err != nil {
 				return nil, err
 			}
 			result[node.GetKey()] = node.GetValue()
 		} else {
-			return nil, errors.New("KEY must be a string followed by a colon")
+			return nil, errors.New("PARSE: Key must be a string followed by a colon")
 		}
 
 	}
 	return result, nil
 }
 
-func ParseAndValidate(tokens *tokenizer.Tokens, i *int) (ASTNode, error) {
+// This function is responsible for returning the value in the proper format for usability
+func ToValue(tokens *tokenizer.Tokens, i *int) (Node ASTNode, Error error) {
 	key := (*tokens)[*i].Value
 	*i += 2
 	switch tk := (*tokens)[*i].Type; tk {
 
 	case tokenizer.TokenBraceOpen, tokenizer.TokenSquareOpen:
-		st := stack.New()
-		st.Push(tk)
-		*i++
-		tkns := make(tokenizer.Tokens, 0)
-		for ; st.Len() > 0 && *i < len(*tokens)-1; *i++ {
-			err := BracketCheck((*tokens)[*i], &st)
-			if err != nil {
-				return nil, err
-			}
-			tkns = append(tkns, (*tokens)[*i])
+		tkns, err := IsolateArrayAndObject(tokens, i)
+		if err != nil {
+			return nil, err
 		}
-		*i--
 		if tk == tokenizer.TokenSquareOpen {
-			value, err := ParseAndValidateArray(tkns)
+			value, err := ParseArray(tkns)
 			if err != nil {
 				return nil, err
 			}
 			return ArrayNode{Key: key, Value: value}, nil
 		} else {
-			value, err := ParseAndValidateObject(tkns)
+			value, err := ParseObject(tkns)
 			if err != nil {
 				return nil, err
 			}
@@ -135,42 +128,102 @@ func ParseAndValidate(tokens *tokenizer.Tokens, i *int) (ASTNode, error) {
 	case tokenizer.TokenNull:
 		return NullNode{Key: key}, nil
 	}
-	return nil, errors.New("Something went wrong when validating and parsing")
+	return nil, errors.New("TO-VALUE: Something went wrong when validating and parsing")
 }
 
-func ParseAndValidateObject(tokens tokenizer.Tokens) (map[string]interface{}, error) {
+// This function is responsible for parsing the object
+func ParseObject(tokens tokenizer.Tokens) (Value map[string]interface{}, Error error) {
 	res := make(map[string]interface{})
-	return res, nil
-}
-
-func ParseAndValidateArray(tokens tokenizer.Tokens) ([]interface{}, error) {
-	res := make([]interface{}, 0)
+	needComma := false
 	for i := 1; i < len(tokens)-1; i++ {
-		switch token := tokens[i].Type; token {
-		case tokenizer.TokenString:
-			res = append(res, tokens[i].Value)
-		case tokenizer.TokenNumber:
-			num, err := strconv.ParseFloat(tokens[i].Value, 64)
+		if tokens[i].Type != tokenizer.TokenComma && needComma {
+			return nil, errors.New("PARSE-OBJECT: Comma needed")
+		} else if tokens[i].Type == tokenizer.TokenComma && needComma {
+			needComma = false
+			continue
+		}
+		key := tokens[i].Value
+		if tokens[i+1].Type != tokenizer.TokenColon {
+			return nil, errors.New("PARSE-OBJECT: Colon needed")
+		}
+		i += 2
+		switch token := tokens[i]; token.Type {
+		case tokenizer.TokenString, tokenizer.TokenNull, tokenizer.TokenNumber, tokenizer.TokenBool:
+			val, err := SimpleValues(token)
 			if err != nil {
 				return nil, err
 			}
-			res = append(res, num)
-		case tokenizer.TokenBool:
-			res = append(res, tokens[i].Value == "true")
-		case tokenizer.TokenNull:
-			res = append(res, nil)
+			res[key] = val
+			needComma = true
+		case tokenizer.TokenBraceOpen, tokenizer.TokenSquareOpen:
+			tkns, err := IsolateArrayAndObject(&tokens, &i)
+			if err != nil {
+				return nil, err
+			}
+			if tkns[0].Type == tokenizer.TokenBraceOpen {
+				obj, err := ParseObject(tkns)
+				if err != nil {
+					return nil, err
+				}
+				res[key] = obj
+			} else {
+				arr, err := ParseArray(tkns)
+				if err != nil {
+					return nil, err
+				}
+				res[key] = arr
+			}
+			needComma = true
 		}
-		val, err := ParseAndValidate(&tokens, &i)
-		if err != nil {
-			return nil, err
-		}
-		res = append(res, val)
-		// Add case for Array and Object
 	}
 	return res, nil
 }
 
-func BracketCheck(token tokenizer.Token, st **stack.Stack) error {
+/* This function is responsible for specifically parsing an array */
+func ParseArray(tokens tokenizer.Tokens) (Value []interface{}, Error error) {
+	res := make([]interface{}, 0)
+	needComma := false
+	for i := 1; i < len(tokens)-1; i++ {
+		if tokens[i].Type != tokenizer.TokenComma && needComma {
+			return nil, errors.New("PARSE-ARRAY: Comma needed")
+		} else if tokens[i].Type == tokenizer.TokenComma && needComma {
+			needComma = false
+			continue
+		}
+		switch token := tokens[i]; token.Type {
+		case tokenizer.TokenString, tokenizer.TokenNumber, tokenizer.TokenNull, tokenizer.TokenBool:
+			val, err := SimpleValues(token)
+			if err != nil {
+				return nil, err
+			}
+			res = append(res, val)
+			needComma = true
+		case tokenizer.TokenBraceOpen, tokenizer.TokenSquareOpen:
+			tkns, err := IsolateArrayAndObject(&tokens, &i)
+			if err != nil {
+				return nil, err
+			}
+			if tkns[0].Type == tokenizer.TokenBraceOpen {
+				obj, err := ParseObject(tkns)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, obj)
+			} else {
+				arr, err := ParseArray(tkns)
+				if err != nil {
+					return nil, err
+				}
+				res = append(res, arr)
+			}
+			needComma = true
+		}
+	}
+	return res, nil
+}
+
+// This function is responsible for checking if the bracket syntax is correct from the input
+func BracketCheck(token tokenizer.Token, st **stack.Stack) (Error error) {
 	switch token.Type {
 	case tokenizer.TokenSquareOpen:
 		(*st).Push(token.Type)
@@ -181,18 +234,55 @@ func BracketCheck(token tokenizer.Token, st **stack.Stack) error {
 	case tokenizer.TokenSquareClose:
 		popped := (*st).Pop()
 		if popped == nil || popped != tokenizer.TokenSquareOpen {
-			return errors.New("Wrong syntax for object. Square brackets do not match")
+			return errors.New("BRACKET-CHECK: Wrong syntax for object. Square brackets do not match")
 		}
 	case tokenizer.TokenBraceClose:
 		popped := (*st).Pop()
 		if popped == nil || popped != tokenizer.TokenBraceOpen {
-			return errors.New("Wrong syntax for object. Curly braces do not match")
+			return errors.New("BRACKET-CHECK: Wrong syntax for object. Curly braces do not match")
 		}
 	case tokenizer.TokenBracketClose:
 		popped := (*st).Pop()
 		if popped == nil || popped != tokenizer.TokenBracketOpen {
-			return errors.New("Wrong syntax for object. Brackets do not match")
+			return errors.New("BRACKET-CHECK: Wrong syntax for object. Brackets do not match")
 		}
 	}
 	return nil
+}
+
+// This function is used to isolate all tokens that specifically form an array or an object
+func IsolateArrayAndObject(tokens *tokenizer.Tokens, i *int) (Tokens tokenizer.Tokens, Error error) {
+	st := stack.New()
+	st.Push((*tokens)[*i].Type)
+	tkns := make(tokenizer.Tokens, 0)
+	tkns = append(tkns, (*tokens)[*i])
+	*i++
+	for ; st.Len() > 0 && *i < len(*tokens)-1; *i++ {
+		err := BracketCheck((*tokens)[*i], &st)
+		if err != nil {
+			return nil, err
+		}
+		tkns = append(tkns, (*tokens)[*i])
+	}
+	*i--
+	return tkns, nil
+}
+
+// This function is responsible for handling simple values like
+// Strings, Null, Boolean and Numbers and returning the value
+func SimpleValues(token tokenizer.Token) (Value interface{}, Error error) {
+	switch token.Type {
+	case tokenizer.TokenString:
+		return token.Value, nil
+	case tokenizer.TokenNumber:
+		num, err := strconv.ParseFloat(token.Value, 64)
+		if err != nil {
+			return nil, err
+		}
+		return num, nil
+	case tokenizer.TokenBool:
+		return token.Value == "true", nil
+	default:
+		return nil, nil
+	}
 }

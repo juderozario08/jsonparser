@@ -1,8 +1,9 @@
 package parser
 
 import (
-	"jsonparser/tokenizer"
 	"testing"
+
+	"jsonparser/tokenizer"
 )
 
 type TestStruct struct {
@@ -11,8 +12,8 @@ type TestStruct struct {
 }
 
 type TestArrayStruct struct {
-	Value    tokenizer.Tokens
-	Expected ASTNode
+	Value    string
+	Expected []interface{}
 }
 
 type TestObjectStruct struct {
@@ -26,7 +27,7 @@ func TestParser(t *testing.T) {
 		{Value: "", Expected: nil},
 	}
 	for _, test := range tests {
-		result, err := Parser(tokenizer.Tokenizer(test.Value))
+		result, err := Parse(tokenizer.Tokenizer(test.Value))
 		if err != nil {
 			t.Errorf("Test Failed for %v. Want \n%v and got \n%v", test.Value, result, test.Expected)
 		}
@@ -35,35 +36,66 @@ func TestParser(t *testing.T) {
 
 func TestArrayParser(t *testing.T) {
 	tests := []TestArrayStruct{
-		{Value: []tokenizer.Token{
-			{Type: tokenizer.TokenSquareOpen, Value: "["},
-			{Type: tokenizer.TokenComma, Value: ","},
-			{Type: tokenizer.TokenString, Value: "Jude"},
-			{Type: tokenizer.TokenComma, Value: ","},
-			{Type: tokenizer.TokenString, Value: "Sara"},
-			{Type: tokenizer.TokenComma, Value: ","},
-			{Type: tokenizer.TokenNumber, Value: "2"},
-			{Type: tokenizer.TokenComma, Value: ","},
-			{Type: tokenizer.TokenBool, Value: "true"},
-			{Type: tokenizer.TokenComma, Value: ","},
-			{Type: tokenizer.TokenNull, Value: "null"},
-			{Type: tokenizer.TokenComma, Value: ","},
-			{Type: tokenizer.TokenBool, Value: "false"},
-			{Type: tokenizer.TokenSquareClose, Value: "]"},
-		}, Expected: nil},
+		{Value: `["Jude", "Sara"]`, Expected: []interface{}{"Jude", "Sara"}},
+		{Value: `["Jude", ["20", "30"]]`, Expected: []interface{}{"Jude", []interface{}{
+			20.0, 30.0,
+		}}},
+		{Value: `[{"name":"Jude", age: "20"},{"name": "Sara", "age": "20"}]`, Expected: []interface{}{
+			map[string]interface{}{
+				"name": "Jude",
+				"age":  "20",
+			},
+			map[string]interface{}{
+				"name": "Sara",
+				"age":  "20",
+			},
+		}},
 	}
-	i := 0
 	for _, test := range tests {
-		tokens := test.Value
-		result, err := ParseAndValidateArray(&tokens, &i)
+		tokens := tokenizer.Tokenizer(test.Value)
+		result, err := ParseArray(tokens)
 		if err != nil {
-			t.Errorf("Test failed, for %v. Want \n%v and got \n%v", test.Value, result, test.Expected)
+			t.Errorf(err.Error())
+		}
+		if !equalSlices(result, test.Expected) {
+			t.Errorf("\nTest:     %v. \nResult:   %v\nExpected: %v\n", test.Value, result, test.Expected)
 		}
 	}
 }
 
+func equalSlices(a []interface{}, b []interface{}) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := 0; i < len(a); i++ {
+		switch a[i].(type) {
+		case []interface{}:
+			if !equalSlices(a[i].([]interface{}), b[i].([]interface{})) {
+				return false
+			}
+		case map[string]interface{}:
+			if !equalObjects(a[i].(map[string]interface{}), b[i].(map[string]interface{})) {
+				return false
+			}
+		default:
+			if a[i] != b[i] {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func equalObjects(a map[string]interface{}, b map[string]interface{}) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	return true
+}
+
 func TestObjectParser(t *testing.T) {
-	tests := TestObjectStruct{Value: `
+	tests := TestObjectStruct{
+		Value: `
 			{
 				"person": {
 					"name": "Jude"
@@ -75,10 +107,10 @@ func TestObjectParser(t *testing.T) {
 				"name": "Jude",
 				"age":  20,
 			},
-		}}
+		},
+	}
 	tokens := tokenizer.Tokenizer(tests.Value)
-	i := 0
-	result, err := ParseAndValidateObject(&tokens, &i)
+	result, err := ParseObject(tokens)
 	if err != nil {
 		t.Errorf("Test failed, for %v. Want \n%v and got \n%v", tests.Value, result, tests.Expected)
 	}
