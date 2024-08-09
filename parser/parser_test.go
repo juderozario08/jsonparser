@@ -21,8 +21,6 @@ type TestObjectStruct struct {
 	Expected map[string]interface{}
 }
 
-const float64EqualityThreshold = 1e-9
-
 func TestParser(t *testing.T) {
 	tests := []TestStruct{
 		{Value: "", Expected: nil},
@@ -45,11 +43,11 @@ func TestArrayParser(t *testing.T) {
 		{Value: `[{"name":"Jude", "age": "20"},{"name": "Sara", "age": "20"}]`, Expected: []interface{}{
 			map[string]interface{}{
 				"name": "Jude",
-				"age":  "20",
+				"age":  20.0,
 			},
 			map[string]interface{}{
 				"name": "Sara",
-				"age":  "20",
+				"age":  20.0,
 			},
 		}},
 	}
@@ -114,7 +112,7 @@ func TestObjectParser(t *testing.T) {
 		Expected: map[string]interface{}{
 			"person": map[string]interface{}{
 				"name": "Jude",
-				"age":  20,
+				"age":  20.0,
 			},
 			"people": []interface{}{"Jude", "Sara"},
 		},
