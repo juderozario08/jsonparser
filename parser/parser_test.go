@@ -21,6 +21,8 @@ type TestObjectStruct struct {
 	Expected map[string]interface{}
 }
 
+const float64EqualityThreshold = 1e-9
+
 func TestParser(t *testing.T) {
 	tests := []TestStruct{
 		{Value: "", Expected: nil},
@@ -40,7 +42,7 @@ func TestArrayParser(t *testing.T) {
 		{Value: `["Jude", ["20", "30"]]`, Expected: []interface{}{"Jude", []interface{}{
 			20.0, 30.0,
 		}}},
-		{Value: `[{"name":"Jude", age: "20"},{"name": "Sara", "age": "20"}]`, Expected: []interface{}{
+		{Value: `[{"name":"Jude", "age": "20"},{"name": "Sara", "age": "20"}]`, Expected: []interface{}{
 			map[string]interface{}{
 				"name": "Jude",
 				"age":  "20",
@@ -87,31 +89,42 @@ func equalSlices(a []interface{}, b []interface{}) bool {
 }
 
 func equalObjects(a map[string]interface{}, b map[string]interface{}) bool {
-	if len(a) != len(b) {
-		return false
+	for k, v := range a {
+		switch a[k].(type) {
+		case []interface{}:
+			if !equalSlices(v.([]interface{}), b[k].([]interface{})) {
+				return false
+			}
+		case map[string]interface{}:
+			if !equalObjects(v.(map[string]interface{}), b[k].(map[string]interface{})) {
+				return false
+			}
+		default:
+			if v != b[k] {
+				return false
+			}
+		}
 	}
 	return true
 }
 
 func TestObjectParser(t *testing.T) {
 	tests := TestObjectStruct{
-		Value: `
-			{
-				"person": {
-					"name": "Jude"
-					"age": "20"
-				}
-			}`,
+		Value: ` {"person":{"name":"Jude","age":"20"}, "people": ["Jude", "Sara"]}`,
 		Expected: map[string]interface{}{
 			"person": map[string]interface{}{
 				"name": "Jude",
 				"age":  20,
 			},
+			"people": []interface{}{"Jude", "Sara"},
 		},
 	}
 	tokens := tokenizer.Tokenizer(tests.Value)
 	result, err := ParseObject(tokens)
 	if err != nil {
-		t.Errorf("Test failed, for %v. Want \n%v and got \n%v", tests.Value, result, tests.Expected)
+		t.Errorf(err.Error())
+	}
+	if !equalObjects(result, tests.Expected) {
+		t.Errorf("\nTest:     %v. \nResult:   %v\nExpected: %v\n", tests.Value, result, tests.Expected)
 	}
 }

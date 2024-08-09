@@ -2,6 +2,8 @@ module jsonparser/main
 
 go 1.22.5
 
+replace jsonparser/parser => ../parser
+
 replace jsonparser/tokenizer => ../tokenizer
 
 require (
@@ -10,5 +12,3 @@ require (
 )
 
 require github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3 // indirect
-
-replace jsonparser/parser => ../parser
