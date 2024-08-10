@@ -13,7 +13,7 @@ This is a basic JSON parser written in Go for personal use. It demonstrates how 
 - **Interfaces**
 - **Types**
 - **Closures**
-- **User_Input/Syntax validation**
+- **UserInput and Syntax validation**
 
 ## Features
 
