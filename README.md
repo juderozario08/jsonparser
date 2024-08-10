@@ -34,7 +34,7 @@ This is a basic JSON parser written in Go for personal use. It demonstrates how 
 
 Clone the repository and build the project:
 
-```bash
+```sh
 git clone https://github.com/juderozario08/jsonparser.git
 cd jsonparser/main
 go build
@@ -44,7 +44,7 @@ go run .
 Feel free to change the main file to any inputs you like
 The ***Parser*** and the ***Tokenizer*** folder also has test cases that can be ran using the following commands
 
-```bash
+```sh
 # Feel free to change the test cases in the code as you like
 cd parser
 go test -run TestArrayParser
