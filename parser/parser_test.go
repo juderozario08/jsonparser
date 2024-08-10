@@ -107,22 +107,29 @@ func equalObjects(a map[string]interface{}, b map[string]interface{}) bool {
 }
 
 func TestObjectParser(t *testing.T) {
-	tests := TestObjectStruct{
-		Value: ` {"person":{"name":"Jude","age":"20"}, "people": ["Jude", "Sara"]}`,
-		Expected: map[string]interface{}{
-			"person": map[string]interface{}{
-				"name": "Jude",
-				"age":  20.0,
+	tests := []TestObjectStruct{
+		{
+			Value: ` {"person":{"name":"Jude","age":"20"}, "people": ["Jude", "Sara"]}`,
+			Expected: map[string]interface{}{
+				"person": map[string]interface{}{
+					"name": "Jude",
+					"age":  20.0,
+				},
+				"people": []interface{}{"Jude", "Sara"},
 			},
-			"people": []interface{}{"Jude", "Sara"},
+		},
+		{
+			Value:    `{"person":{"name":"Jude","age":"20"} "people": ["Jude", "Sara"]}`,
+			Expected: nil,
 		},
 	}
-	tokens := tokenizer.Tokenizer(tests.Value)
-	result, err := ParseObject(tokens)
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-	if !equalObjects(result, tests.Expected) {
-		t.Errorf("\nTest:     %v. \nResult:   %v\nExpected: %v\n", tests.Value, result, tests.Expected)
+	for _, test := range tests {
+		tokens := tokenizer.Tokenizer(test.Value)
+		result, err := ParseObject(tokens)
+		if err == nil && test.Expected == nil {
+			t.Errorf("Program error expected")
+		} else if err != nil && test.Expected != nil || !equalObjects(result, test.Expected) {
+			t.Errorf("Input: %v\nResult: %v\nExpected: %v\n", test.Value, result, test.Expected)
+		}
 	}
 }

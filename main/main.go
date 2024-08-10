@@ -8,11 +8,21 @@ import (
 )
 
 func main() {
-	test := `{"people":[{"name":"Jude", "age": "20"},{"name": "Sara", "age": "20"}]}`
-	tokens := tokenizer.Tokenizer(test)
-	result, err := parser.Parse(tokens)
+	json := `
+		{
+			"name": "Jude",
+			"age": "20",
+			"hobbies": ["coding", "gaming", "gym"],
+			"love": {
+				"name": "Sara",
+				"age": 19
+			}
+		}`
+	result, err := parser.Parse(tokenizer.Tokenizer(json))
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	fmt.Println(result)
+	for k, v := range result {
+		fmt.Println(k+" :", v)
+	}
 }
