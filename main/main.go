@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"jsonparser/encoder"
+	"jsonparser/parser"
+	"jsonparser/tokenizer"
 )
 
 func main() {
@@ -34,4 +36,21 @@ func main() {
 		fmt.Println(err.Error())
 	}
 	fmt.Println(result)
+	json := `
+		{
+			"name": "Jude",
+			"age": "20",
+			"hobbies": ["coding", "gaming", "gym"],
+			"love": {
+				"name": "Sara",
+				"age": 19
+			}
+		}`
+	res, err := parser.Parse(tokenizer.Tokenizer(json))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	for k, v := range res {
+		fmt.Println(k+" :", v)
+	}
 }
