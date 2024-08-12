@@ -18,7 +18,7 @@ This is a basic JSON parser written in Go for personal use. It demonstrates how 
 ## Features
 
 - **Basic JSON Parsing**: Convert JSON strings to Go data structures.
-- **JSON Encoding**: Convert Go data structures to JSON strings. __(Coming Soon)__
+- **JSON Encoding**: Convert Go data structures to JSON strings.
 - **Learning Example**: Ideal for understanding JSON parsing in Go.
 
 ## Tokenizer Folder
@@ -27,7 +27,7 @@ This is a basic JSON parser written in Go for personal use. It demonstrates how 
 ## Parser Folder
 - Responsible for Parsing and Validating the data being sent through the JSON and turned into data structures used in Golang
 
-## Encoder (Coming Soon)
+## Encoder
 - Responsible for taking the Golang data structures and converting them into JSON format
 
 ## Installation
