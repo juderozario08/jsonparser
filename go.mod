@@ -1,4 +1,4 @@
-module jsonparser/tokenizer
+module jsonparser
 
 go 1.22.5
 

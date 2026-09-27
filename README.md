@@ -42,14 +42,15 @@ go run .
 ```
 
 Feel free to change the main file to any inputs you like
-The ***Parser*** and the ***Tokenizer*** folder also has test cases that can be ran using the following commands
+The project includes test cases for the parser, tokenizer, and encoder that can be run using:
 
 ```sh
-# Feel free to change the test cases in the code as you like
-cd parser
-go test -run TestArrayParser
-go test -run TestOjbectParser
-cd ../tokenizer
-go test -run TestTokenizer
+# Run all tests across the entire project
+go test -v ./...
+
+# Or run specific test suites
+go test -v ./parser
+go test -v ./tokenizer
+go test -v ./encoder
 ```
 Happy Coding :)
